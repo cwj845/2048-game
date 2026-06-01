@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2048 Game</title>
+    <title>2048 Game - Enhanced</title>
     <style>
         * {
             margin: 0;
@@ -12,19 +12,19 @@
         }
 
         body {
-            font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 20px;
+            color: #776e65;
         }
 
         .container {
             width: 100%;
-            max-width: 400px;
+            max-width: 500px;
         }
 
         .header {
@@ -32,10 +32,12 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .title {
-            font-size: 60px;
+            font-size: 50px;
             font-weight: bold;
             color: #f9f6f2;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
@@ -65,57 +67,154 @@
             font-size: 20px;
             font-weight: bold;
             color: #fff;
+            transition: all 0.2s ease;
         }
 
-        .subtitle {
+        .score-value.flash {
+            animation: scoreFlash 0.3s ease;
+        }
+
+        @keyframes scoreFlash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); color: #ffd700; }
+            100% { transform: scale(1); }
+        }
+
+        .controls {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
             margin-bottom: 15px;
         }
 
-        .new-game-btn {
+        .btn {
             background: #8f7a66;
             color: #f9f6f2;
             border: none;
             border-radius: 6px;
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
 
-        .new-game-btn:hover {
+        .btn:hover {
             background: #9f8b77;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.pause {
+            background: #f59563;
+        }
+
+        .btn.pause:hover {
+            background: #f67c5f;
+        }
+
+        .btn.resume {
+            background: #6ab04c;
+        }
+
+        .btn.resume:hover {
+            background: #7cb75e;
+        }
+
+        .difficulty {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .setting-label {
+            color: rgba(255,255,255,0.9);
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        select, input[type="range"] {
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.9);
+            font-size: 14px;
+            color: #776e65;
+            cursor: pointer;
+        }
+
+        .speed-value {
+            color: #f9f6f2;
+            font-size: 12px;
+            text-align: center;
         }
 
         .message {
+            text-align: center;
             font-size: 18px;
             font-weight: bold;
             color: #f9f6f2;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+            min-height: 24px;
+        }
+
+        .message.paused {
+            color: #f59563;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .game-board-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         .game-board {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: rgba(255,255,255,0.15);
             border-radius: 12px;
-            padding: 15px;
+            padding: 10px;
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
+            gap: 8px;
         }
 
         .tile {
-            aspect-ratio: 1;
             background: rgba(255,255,255,0.3);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
-            transition: all 0.15s ease;
+            transition: all var(--animation-speed, 0.15s) ease;
             position: relative;
         }
 
@@ -130,19 +229,23 @@
         .tile-512 { background: #edc850; color: #f9f6f2; }
         .tile-1024 { background: #edc53f; color: #f9f6f2; }
         .tile-2048 { background: #edc22e; color: #f9f6f2; }
+        .tile-super { background: #3c3a32; color: #f9f6f2; }
 
         .tile-new {
-            animation: appear 0.2s ease;
+            animation: tileAppear var(--animation-speed, 0.15s) ease;
         }
 
         .tile-merged {
-            animation: pop 0.2s ease;
+            animation: tileMerge var(--animation-speed, 0.15s) ease;
         }
 
-        @keyframes appear {
+        @keyframes tileAppear {
             0% {
                 opacity: 0;
                 transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
             }
             100% {
                 opacity: 1;
@@ -150,12 +253,12 @@
             }
         }
 
-        @keyframes pop {
+        @keyframes tileMerge {
             0% {
                 transform: scale(1);
             }
             50% {
-                transform: scale(1.1);
+                transform: scale(1.2);
             }
             100% {
                 transform: scale(1);
@@ -169,7 +272,7 @@
             font-size: 14px;
         }
 
-        .game-over-overlay {
+        .overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -180,29 +283,46 @@
             align-items: center;
             justify-content: center;
             z-index: 100;
+            animation: overlayFadeIn 0.3s ease;
         }
 
-        .game-over-content {
+        @keyframes overlayFadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .overlay-content {
             background: #f9f6f2;
             padding: 40px;
             border-radius: 15px;
             text-align: center;
+            animation: contentShake 0.5s ease;
         }
 
-        .game-over-title {
+        @keyframes contentShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .overlay-title {
             font-size: 48px;
             font-weight: bold;
             color: #776e65;
             margin-bottom: 20px;
         }
 
-        .game-over-score {
+        .overlay-score {
             font-size: 24px;
             color: #776e65;
             margin-bottom: 25px;
         }
 
-        .game-over-btn {
+        .overlay-btn {
             background: #8f7a66;
             color: #f9f6f2;
             border: none;
@@ -212,75 +332,176 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
+            margin: 0 10px;
         }
 
-        .game-over-btn:hover {
+        .overlay-btn:hover {
             background: #9f8b77;
         }
 
-        .win-overlay {
+        .overlay-btn.keep-playing {
+            background: #edc22e;
+            color: #776e65;
+        }
+
+        .overlay-btn.keep-playing:hover {
+            background: #edc53f;
+        }
+
+        .victory-fireworks {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(237, 198, 46, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
+            pointer-events: none;
+            overflow: hidden;
             border-radius: 12px;
         }
 
-        .win-content {
-            text-align: center;
+        .firework {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: fireworkExplode 0.8s ease-out forwards;
         }
 
-        .win-title {
-            font-size: 48px;
-            font-weight: bold;
-            color: #f9f6f2;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
+        @keyframes fireworkExplode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
         }
 
-        .win-btn {
-            background: #8f7a66;
+        .leaderboard-section {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .leaderboard-title {
             color: #f9f6f2;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 25px;
             font-size: 16px;
             font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-right: 10px;
         }
 
-        .win-btn:hover {
-            background: #9f8b77;
+        .leaderboard-list {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
-        .win-btn.keep-playing {
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            margin-bottom: 5px;
+            color: #f9f6f2;
+            font-size: 14px;
+        }
+
+        .leaderboard-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .leaderboard-rank {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .leaderboard-rank.top3 {
             background: #edc22e;
             color: #776e65;
         }
 
-        .win-btn.keep-playing:hover {
-            background: #edc53f;
+        .leaderboard-score {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .leaderboard-grid {
+            font-size: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .leaderboard-date {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .leaderboard-empty {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            padding: 20px;
+        }
+
+        .sound-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #f9f6f2;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        .sound-hint.show {
+            opacity: 1;
         }
 
         @media (max-width: 480px) {
             .title {
-                font-size: 45px;
+                font-size: 40px;
             }
 
             .tile {
-                font-size: 24px;
+                font-size: 22px;
             }
 
             .game-board {
-                padding: 10px;
-                gap: 8px;
+                padding: 8px;
+                gap: 6px;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .btn {
+                padding: 8px 15px;
+                font-size: 13px;
             }
         }
     </style>
@@ -300,57 +521,152 @@
                 </div>
             </div>
         </div>
-        
-        <div class="subtitle">
-            <button class="new-game-btn" id="new-game">New Game</button>
-            <div class="message" id="message"></div>
+
+        <div class="difficulty">
+            <div class="setting-group">
+                <label class="setting-label">网格大小</label>
+                <select id="grid-size" onchange="changeGridSize()">
+                    <option value="4">4x4</option>
+                    <option value="5">5x5</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label class="setting-label">动画速度</label>
+                <input type="range" id="animation-speed" min="0" max="30" value="15" step="1" oninput="updateAnimationSpeed()">
+                <div class="speed-value" id="speed-value">0.15s</div>
+            </div>
         </div>
-        
-        <div class="game-board" id="game-board">
-            <div class="tile" data-row="0" data-col="0"></div>
-            <div class="tile" data-row="0" data-col="1"></div>
-            <div class="tile" data-row="0" data-col="2"></div>
-            <div class="tile" data-row="0" data-col="3"></div>
-            <div class="tile" data-row="1" data-col="0"></div>
-            <div class="tile" data-row="1" data-col="1"></div>
-            <div class="tile" data-row="1" data-col="2"></div>
-            <div class="tile" data-row="1" data-col="3"></div>
-            <div class="tile" data-row="2" data-col="0"></div>
-            <div class="tile" data-row="2" data-col="1"></div>
-            <div class="tile" data-row="2" data-col="2"></div>
-            <div class="tile" data-row="2" data-col="3"></div>
-            <div class="tile" data-row="3" data-col="0"></div>
-            <div class="tile" data-row="3" data-col="1"></div>
-            <div class="tile" data-row="3" data-col="2"></div>
-            <div class="tile" data-row="3" data-col="3"></div>
+
+        <div class="controls">
+            <button class="btn pause" id="pause-btn" onclick="togglePause()">暂停</button>
+            <button class="btn" id="restart-btn" onclick="restartGame()">重新开始</button>
         </div>
-        
+
+        <div class="message" id="message"></div>
+
+        <div class="game-board-wrapper">
+            <div class="game-board" id="game-board"></div>
+            <div class="victory-fireworks" id="fireworks"></div>
+        </div>
+
         <div class="instructions">
             使用方向键 ↑↓←→ 或滑动屏幕移动方块<br>
             相同数字碰撞时合并，达到 2048 即可获胜！
         </div>
-    </div>
-    
-    <div class="game-over-overlay" id="game-over-overlay">
-        <div class="game-over-content">
-            <div class="game-over-title">Game Over!</div>
-            <div class="game-over-score">最终得分: <span id="final-score">0</span></div>
-            <button class="game-over-btn" id="restart-btn">再来一局</button>
+
+        <div class="leaderboard-section">
+            <div class="leaderboard-header">
+                <div class="leaderboard-title">🏆 排行榜</div>
+                <button class="btn" style="font-size: 12px; padding: 5px 10px;" onclick="clearLeaderboard()">清除</button>
+            </div>
+            <ul class="leaderboard-list" id="leaderboard"></ul>
         </div>
     </div>
 
+    <div class="overlay" id="game-over-overlay">
+        <div class="overlay-content">
+            <div class="overlay-title">Game Over!</div>
+            <div class="overlay-score">最终得分: <span id="final-score">0</span></div>
+            <button class="overlay-btn" onclick="restartGame()">再来一局</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="win-overlay">
+        <div class="overlay-content">
+            <div class="overlay-title">🎉 You Win!</div>
+            <div class="overlay-score">得分: <span id="win-score">0</span></div>
+            <button class="overlay-btn keep-playing" onclick="continueGame()">继续游戏</button>
+            <button class="overlay-btn" onclick="restartGame()">新游戏</button>
+        </div>
+    </div>
+
+    <div class="sound-hint" id="sound-hint">点击页面启用音效</div>
+
     <script>
-        const GRID_SIZE = 4;
+        let GRID_SIZE = 4;
         let grid = [];
         let score = 0;
         let bestScore = 0;
         let hasWon = false;
         let gameOver = false;
+        let isPaused = false;
+        let animationSpeed = 0.15;
+        let audioContext = null;
+        let soundEnabled = false;
+        let lastScoreForLeaderboard = null;
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            soundEnabled = true;
+            document.getElementById('sound-hint').classList.remove('show');
+        }
+
+        function playSound(frequency, duration, type = 'sine') {
+            if (!soundEnabled || !audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playMergeSound() {
+            playSound(800, 0.1);
+        }
+
+        function playInvalidMoveSound() {
+            playSound(300, 0.05);
+        }
+
+        function playWinSound() {
+            playSound(523, 0.15);
+            setTimeout(() => playSound(659, 0.15), 150);
+            setTimeout(() => playSound(784, 0.2), 300);
+        }
+
+        function playGameOverSound() {
+            playSound(200, 0.15);
+            setTimeout(() => playSound(150, 0.2), 150);
+            setTimeout(() => playSound(100, 0.25), 350);
+        }
 
         function initGrid() {
             grid = [];
             for (let i = 0; i < GRID_SIZE; i++) {
-                grid.push([0, 0, 0, 0]);
+                grid.push(new Array(GRID_SIZE).fill(0));
+            }
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+            
+            const gap = GRID_SIZE === 4 ? '8px' : '6px';
+            const padding = GRID_SIZE === 4 ? '10px' : '8px';
+            board.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+            board.style.gap = gap;
+            board.style.padding = padding;
+
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    tile.dataset.row = row;
+                    tile.dataset.col = col;
+                    board.appendChild(tile);
+                }
             }
         }
 
@@ -376,23 +692,39 @@
             
             const tile = document.querySelector(`[data-row="${randomCell.row}"][data-col="${randomCell.col}"]`);
             tile.textContent = value;
-            tile.className = `tile tile-${value} tile-new`;
+            tile.className = `tile tile-${value <= 2048 ? value : 'super'} tile-new`;
             
             setTimeout(() => {
                 tile.classList.remove('tile-new');
-            }, 200);
+            }, animationSpeed * 1000);
             
             return true;
         }
 
         function updateScore(newScore) {
             score += newScore;
-            document.getElementById('score').textContent = score;
+            const scoreElement = document.getElementById('score');
+            scoreElement.textContent = score;
+            scoreElement.classList.add('flash');
+            
+            setTimeout(() => {
+                scoreElement.classList.remove('flash');
+            }, 300);
             
             if (score > bestScore) {
                 bestScore = score;
                 document.getElementById('best').textContent = bestScore;
-                localStorage.setItem('2048-best', bestScore.toString());
+                localStorage.setItem(`bestScore_${GRID_SIZE}`, bestScore.toString());
+            }
+        }
+
+        function loadBestScore() {
+            const saved = localStorage.getItem(`bestScore_${GRID_SIZE}`);
+            if (saved) {
+                bestScore = parseInt(saved);
+                document.getElementById('best').textContent = bestScore;
+            } else {
+                bestScore = 0;
             }
         }
 
@@ -407,7 +739,7 @@
                         tile.className = 'tile';
                     } else {
                         tile.textContent = value;
-                        tile.className = `tile tile-${value}`;
+                        tile.className = `tile tile-${value <= 2048 ? value : 'super'}`;
                     }
                 }
             }
@@ -437,7 +769,7 @@
         }
 
         function move(direction) {
-            if (gameOver) return false;
+            if (gameOver || isPaused) return false;
             
             let moved = false;
             let totalScoreGain = 0;
@@ -487,13 +819,18 @@
             }
             
             if (moved) {
+                if (totalScoreGain > 0) {
+                    playMergeSound();
+                }
                 updateScore(totalScoreGain);
                 renderGrid();
                 
                 setTimeout(() => {
                     addRandomTile();
                     checkGameState();
-                }, 100);
+                }, animationSpeed * 1000);
+            } else {
+                playInvalidMoveSound();
             }
             
             return moved;
@@ -520,16 +857,48 @@
             return false;
         }
 
+        function createFireworks() {
+            const fireworks = document.getElementById('fireworks');
+            fireworks.innerHTML = '';
+            
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+            
+            for (let i = 0; i < 12; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = `${20 + Math.random() * 60}%`;
+                firework.style.top = `${20 + Math.random() * 60}%`;
+                firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                firework.style.animationDelay = `${Math.random() * 0.3}s`;
+                fireworks.appendChild(firework);
+            }
+            
+            fireworks.style.display = 'block';
+            setTimeout(() => {
+                fireworks.style.display = 'none';
+            }, 1000);
+        }
+
         function checkGameState() {
             if (!hasWon && hasWonTile()) {
                 hasWon = true;
                 document.getElementById('message').textContent = '🎉 You Win!';
+                document.getElementById('win-score').textContent = score;
+                document.getElementById('win-overlay').style.display = 'flex';
+                createFireworks();
+                playWinSound();
             }
             
             if (!canMove()) {
                 gameOver = true;
                 document.getElementById('final-score').textContent = score;
                 document.getElementById('game-over-overlay').style.display = 'flex';
+                playGameOverSound();
+                
+                if (lastScoreForLeaderboard !== score) {
+                    addToLeaderboard(score);
+                    lastScoreForLeaderboard = score;
+                }
             }
         }
 
@@ -538,17 +907,69 @@
             score = 0;
             hasWon = false;
             gameOver = false;
+            isPaused = false;
+            lastScoreForLeaderboard = null;
             
             document.getElementById('score').textContent = '0';
             document.getElementById('message').textContent = '';
             document.getElementById('game-over-overlay').style.display = 'none';
+            document.getElementById('win-overlay').style.display = 'none';
+            document.getElementById('pause-btn').textContent = '暂停';
+            document.getElementById('pause-btn').className = 'btn pause';
             
             renderGrid();
             addRandomTile();
             addRandomTile();
         }
 
+        function restartGame() {
+            startNewGame();
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            
+            if (isPaused) {
+                document.getElementById('message').textContent = '⏸️ 暂停中';
+                document.getElementById('message').classList.add('paused');
+                document.getElementById('pause-btn').textContent = '继续';
+                document.getElementById('pause-btn').className = 'btn resume';
+            } else {
+                document.getElementById('message').textContent = '';
+                document.getElementById('message').classList.remove('paused');
+                document.getElementById('pause-btn').textContent = '暂停';
+                document.getElementById('pause-btn').className = 'btn pause';
+            }
+        }
+
+        function continueGame() {
+            document.getElementById('win-overlay').style.display = 'none';
+            document.getElementById('message').textContent = '继续挑战更高分数！';
+        }
+
+        function changeGridSize() {
+            const select = document.getElementById('grid-size');
+            GRID_SIZE = parseInt(select.value);
+            
+            renderBoard();
+            loadBestScore();
+            startNewGame();
+        }
+
+        function updateAnimationSpeed() {
+            const slider = document.getElementById('animation-speed');
+            animationSpeed = parseFloat(slider.value) / 100;
+            document.getElementById('speed-value').textContent = animationSpeed.toFixed(2) + 's';
+            
+            document.documentElement.style.setProperty('--animation-speed', animationSpeed + 's');
+        }
+
         function handleKeyDown(e) {
+            if (!soundEnabled) {
+                initAudio();
+                return;
+            }
+            
             const keyMap = {
                 ArrowUp: 'up',
                 ArrowDown: 'down',
@@ -576,7 +997,12 @@
         }
 
         function handleTouchEnd(e) {
-            if (gameOver) return;
+            if (!soundEnabled) {
+                initAudio();
+                return;
+            }
+            
+            if (gameOver || isPaused) return;
             
             const touchEndX = e.changedTouches[0].clientX;
             const touchEndY = e.changedTouches[0].clientY;
@@ -594,24 +1020,88 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedBest = localStorage.getItem('2048-best');
-            if (savedBest) {
-                bestScore = parseInt(savedBest);
-                document.getElementById('best').textContent = bestScore;
+        function loadLeaderboard() {
+            const saved = localStorage.getItem('leaderboard');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveLeaderboard(leaderboard) {
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+        }
+
+        function addToLeaderboard(score) {
+            let leaderboard = loadLeaderboard();
+            
+            const entry = {
+                score: score,
+                gridSize: GRID_SIZE,
+                date: new Date().toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+            };
+            
+            leaderboard.push(entry);
+            leaderboard.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return new Date(b.date) - new Date(a.date);
+            });
+            
+            leaderboard = leaderboard.slice(0, 10);
+            saveLeaderboard(leaderboard);
+            renderLeaderboard();
+        }
+
+        function renderLeaderboard() {
+            const leaderboard = loadLeaderboard();
+            const list = document.getElementById('leaderboard');
+            
+            if (leaderboard.length === 0) {
+                list.innerHTML = '<li class="leaderboard-empty">暂无记录</li>';
+                return;
             }
             
+            list.innerHTML = leaderboard.map((entry, index) => `
+                <li class="leaderboard-item">
+                    <span class="leaderboard-rank ${index < 3 ? 'top3' : ''}">${index + 1}</span>
+                    <span class="leaderboard-grid">${entry.gridSize}x${entry.gridSize}</span>
+                    <span class="leaderboard-score">${entry.score}</span>
+                    <span class="leaderboard-date">${entry.date}</span>
+                </li>
+            `).join('');
+        }
+
+        function clearLeaderboard() {
+            localStorage.removeItem('leaderboard');
+            renderLeaderboard();
+        }
+
+        function initGame() {
+            renderBoard();
+            loadBestScore();
+            renderLeaderboard();
+            updateAnimationSpeed();
             startNewGame();
-            
-            document.getElementById('new-game').addEventListener('click', startNewGame);
-            document.getElementById('restart-btn').addEventListener('click', startNewGame);
             
             document.addEventListener('keydown', handleKeyDown);
             
             const gameBoard = document.getElementById('game-board');
             gameBoard.addEventListener('touchstart', handleTouchStart, { passive: true });
             gameBoard.addEventListener('touchend', handleTouchEnd);
-        });
+            
+            document.addEventListener('click', () => {
+                if (!soundEnabled) {
+                    initAudio();
+                }
+            });
+            
+            document.getElementById('sound-hint').classList.add('show');
+        }
+
+        document.addEventListener('DOMContentLoaded', initGame);
     </script>
 </body>
 </html>
